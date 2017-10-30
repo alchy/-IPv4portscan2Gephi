@@ -1,7 +1,7 @@
 # IPv4portscan2Gephi
 simple TCP/CONNECT network scanner 
 
-this network scanner perform TCP scan on networks listed in .xls file
+this network scanner script performs a simple TCP scan on networks listed in .xls file
 and streams scan result to Gephi for real-time visualisation.
 
 dependent on: https://github.com/totetmatt/GephiStreamer
