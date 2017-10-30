@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 # name: scan.py
-# vers: 0.1 
+# vers: 0.1
 # multithreaded IPv4 port-scanner, scans low-ports (0-1023) for a networks given
-# in .xls file. scan.py saves open TCP ports to a file and also streams 
-# results to to gephi for RT scan visualization (each graph node is a service or 
+# in .xls file. scan.py saves open TCP ports to a file and also streams
+# results to to gephi for RT scan visualization (each graph node is a service or
 # host, graph edges are TCP ports).
 # scans.pyuses standard CONNECT method, therefore it can be run with ordinary
 # user rights, good for env. wher use is restricted and NMAP won't run
@@ -27,8 +27,8 @@ DEBUG = False
 PUSH2GRAPH = False
 
 # where to put scan.py data
-NETWORK_FILE = 'C:\\Users\\JNEMEC4\\Desktop\\LAN\\In\\RANGES.csv'
-NETWORK_SCAN_RESULTS_FILE = 'C:\\Users\\JNEMEC4\\Desktop\\LAN\\Out\\SCANS.csv'
+NETWORK_FILE = 'C:\\XYZ\\RANGES.csv'
+NETWORK_SCAN_RESULTS_FILE = 'C:\\XYZ\\SCANS.csv'
 
 # data structure (.xls) should look like this:
 #
@@ -46,7 +46,7 @@ class LookupThread(threading.Thread):
         self.addr = addr
         self.result_queue = result_queue
         self.pool = pool
-        
+
         threading.Thread.__init__(self)
 
     def run(self):
@@ -71,33 +71,33 @@ class ScannerIPv4Thread(threading.Thread):
         self.addr = addr
         self.result_queue = result_queue
         self.pool = pool
-        
+
         threading.Thread.__init__(self)
-        
+
     def run(self):
         self.pool.acquire()
         try:
             self.scan()
         finally:
             self.pool.release()
-        
+
     def scan(self):
         try:
             report_open = []
             portlist = range(0, 1023)
-            
+
             for port in portlist:
                 port = int(port)
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.settimeout(.01)
                 result = sock.connect_ex((self.addr, port))
                 sock.close()
-            
+
                 if result == 0:
                     report_open.append(port)
 
             result_queue.put([self.addr, report_open])
-                
+
         except KeyboardInterrupt:
             sys.exit()
 
@@ -116,13 +116,13 @@ def dump_queue(queue):
     return items
 
 
-def gephi_commit_scan(stream, items):    
+def gephi_commit_scan(stream, items):
     with open(NETWORK_SCAN_RESULTS_FILE, "a") as scan_file:
         for item in items:
             addr, open_tcp_ports = item
             if len(open_tcp_ports) != 0:
                 scan_file.write('node:' + str(addr) + '\n')
-                for open_tcp_port in open_tcp_ports:       
+                for open_tcp_port in open_tcp_ports:
                     scan_file.write('edge:' + str(addr) + '>' + str(open_tcp_port)+ '\n')
 
     for item in items:
@@ -142,8 +142,8 @@ def gephi_commit_scan(stream, items):
                 stream.add_edge(open_tcp_port_edge)
         else:
             print('  no port@' + str(addr))
-                
-    stream.commit() 
+
+    stream.commit()
 
 def csv_ip_open(csv_path):
     network_nodes = []
@@ -159,14 +159,14 @@ def csv_ip_open(csv_path):
 
 
 def perform_scan(ip_addresses):
-        ''' to scan the network faster we use multithreading 
+        ''' to scan the network faster we use multithreading
             (not multiprocessing)
         '''
         threads = []
         for addr in ip_addresses:
-            
+
             threads.append(ScannerIPv4Thread(addr, result_queue, pool))
-        
+
         for thread in threads:
 
             if DEBUG == True:
@@ -186,25 +186,25 @@ def perform_scan(ip_addresses):
 
             # send result to gephi for visualization
             gephi_commit_scan(stream, items)
-    
-        print('All threads stopped...')  
-        
+
+        print('All threads stopped...')
+
 
 if __name__ == '__main__':
-    
+
     # open csv with network ranges
     network_nodes =  csv_ip_open(NETWORK_FILE)
-    
+
     result_queue = Queue()
-    stream = streamer.Streamer(streamer.GephiREST(hostname="localhost", port=8080, workspace="workspace0"))    
+    stream = streamer.Streamer(streamer.GephiREST(hostname="localhost", port=8080, workspace="workspace0"))
     pool = threading.BoundedSemaphore(128)
-    
+
     continue_flag = False
-    
+
     # for each network range from the list; do
     for network in network_nodes:
         print(network)
-        
+
         # wait for input - DEBUG
         if continue_flag is not True:
             user_input = input("Should I stop now or continue? [yes/no/continue]")
@@ -212,10 +212,10 @@ if __name__ == '__main__':
                 break
             if user_input == 'c' or user_input == 'continue':
                 continue_flag = True
-        
+
         # reset ip_addresses
         ip_addresses = []
-        
+
         # expand network range to list of IPV4 addresses
         # fix IPv4 ranges if there is no subnet mask given or other typo
         try:
@@ -226,17 +226,17 @@ if __name__ == '__main__':
                     # make sure the last octet is 0
                     oct_A, oct_B, oct_C, _ = network[2][0].split('.')
                     network[2][0] = oct_A + '.' + oct_B + '.' + oct_C + '.0/24'
-                
+
                 except ValueError:
                     print('bad network definition:', network[2][0])
 
         try:
             for item in list(ipaddress.ip_network(network[2][0]).hosts()):
                 ip_addresses.append(str(item))
-            
+
             # call the scan function
             print(ip_addresses)
             perform_scan(ip_addresses)
-            
+
         except ValueError:
-            print('bad network definition:', network[2][0])        
+            print('bad network definition:', network[2][0])

@@ -5,7 +5,7 @@
 # vers: 0.1
 # if scan.py aleady gathered the data and we want to replay
 # scanning (fast) process, use streamer for replay the scan
-# 
+#
 
 # standard libs
 import time
@@ -25,8 +25,7 @@ OBFUSCATE_IPv4 = True
 REPLAY_SPEED = .05 # 50ms
 
 # where the scan.py data are
-#network_scan_result_file = '\\\\VSFS16\\Home\\JNEMEC4\\Gephi\\SCANS.csv'
-network_scan_result_file = 'C:\\Users\\JNEMEC4\\Desktop\\LAN\\Out\\SCANS.csv'
+network_scan_result_file = 'C:\\XYZ\\SCANS.csv'
 
 
 def generate_salt(length):
@@ -54,53 +53,53 @@ def gephi_file_stream_read():
 def gephi_push_data(stream, item):
     ''' push data to gephi  '''
     data_type, data_content = item.split(':')
-    
+
     if data_type == 'node':
         ''' node data processing '''
         if OBFUSCATE_IPv4 == True:
             addr = obfuscateIPv4(data_content)
         else:
             addr = data_content
-            
+
         print(data_type + ':' + addr)
         uniq_systems.append(addr)
         addr_node = graph.Node(addr, size=10, custom_property=1)
         stream.add_node(addr_node)
-        
+
     if data_type == 'edge':
         ''' edge data processing '''
         addr, open_tcp_port = data_content.split('>')
-        
+
         if OBFUSCATE_IPv4 == True:
             addr = obfuscateIPv4(addr)
-        
+
         print(data_type + ':' + addr + '>' + open_tcp_port)
         uniq_services.append(open_tcp_port)
-        
+
         try:
             uniq_services_count[open_tcp_port] = uniq_services_count[open_tcp_port] + 1
         except KeyError:
             uniq_services_count[open_tcp_port] = 1
         open_tcp_port_node = graph.Node(open_tcp_port, custom_property=64)
         stream.add_node(open_tcp_port_node)
-        
+
         open_tcp_port_edge = graph.Edge(\
                                         addr, open_tcp_port_node, \
                                         custom_property="TCP IPv4 service: " \
                                         + str(open_tcp_port))
         stream.add_edge(open_tcp_port_edge)
-    
+
 
 if __name__ == '__main__':
     ''' replay the data '''
     # anonymize source scan data (IPv4s)
     SALT = generate_salt(32)
-    
+
     # placeholders
     uniq_systems = []
     uniq_services = []
     uniq_services_count = {}
-    
+
     # make sure your gephi workspace is 0
     stream = streamer.Streamer(streamer.GephiREST(hostname="localhost", port=8080, workspace="workspace0"))
 
@@ -113,7 +112,7 @@ if __name__ == '__main__':
     print('------------------------------')
     print('[i]  unique systems: ', len(set(uniq_systems)))
     print('[i] unique services: ', len(set(uniq_services)))
-    
+
     sorted_uniq_services_count = sorted(uniq_services_count.items(), \
                                         key=operator.itemgetter(1))
     print('------------------------------')
