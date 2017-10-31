@@ -3,7 +3,7 @@ simple TCP/CONNECT network scanner
 ----------------------------------
 
 This network scanner script performs a simple TCP-CONNECT scan on networks listed in .xls file
-and streams results to Gephi for real-time network visualisation.
+and streams result to Gephi for real-time network visualisation.
 
 What is Gephi?
 Gephi is the leading visualization and exploration software for all kinds of graphs and networks.
