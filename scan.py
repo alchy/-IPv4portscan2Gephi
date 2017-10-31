@@ -2,13 +2,13 @@
 
 # name: scan.py
 # vers: 0.1
-# multithreaded IPv4 port-scanner, scans low-ports (0-1023) for a networks given
-# in .xls file. scan.py saves open TCP ports to a file and also streams
-# results to to gephi for RT scan visualization (each graph node is a service or
-# host, graph edges are TCP ports).
-# scans.pyuses standard CONNECT method, therefore it can be run with ordinary
-# user rights, good for env. wher use is restricted and NMAP won't run
-# (ie. NMAP may need to access iface in RAW access mode).
+# Multithreaded IPv4 port-scanner, scans low-ports (0-1023) for a networks given
+# in .xls file. scan.py saves open TCP ports to a file plus streams
+# results to to Gephi for RT visualization (in Gephi graph, each graph node is
+# a service or a host, graph edges are open TCP ports).
+# scans.py scans with TCP CONNECT method, the script therefore the scipt
+# run with ordinary user rights - good for env. wher user is restricted and
+# NMAP won't run.
 
 import sys
 import threading
@@ -17,7 +17,7 @@ from multiprocessing import Queue
 import csv
 import ipaddress
 
-# you will need Python classes for streaming graph to gephi
+# you will need Python class 'gephistreamer' for streaming graph to Gephi
 # https://github.com/totetmatt/GephiStreamer
 from gephistreamer import graph
 from gephistreamer import streamer
@@ -37,7 +37,7 @@ NETWORK_SCAN_RESULTS_FILE = 'C:\\XYZ\\SCANS.csv'
 #
 # lokalni sit doma     ; None        ; 172.16.124.0/24; None;    None     ; None
 #
-# networks with vlan_type == U is alweays EXCLUDED from the scan
+# networks with vlan_type == 'U' type is EXCLUDED from the scan
 
 
 class LookupThread(threading.Thread):
@@ -192,13 +192,17 @@ def perform_scan(ip_addresses):
 
 if __name__ == '__main__':
 
-    # open csv with network ranges
+    # read csv with network ranges
     network_nodes =  csv_ip_open(NETWORK_FILE)
 
+    # create queue for threads
     result_queue = Queue()
     stream = streamer.Streamer(streamer.GephiREST(hostname="localhost", port=8080, workspace="workspace0"))
+
+    # run 128 scanners in parallel
     pool = threading.BoundedSemaphore(128)
 
+    # some debug
     continue_flag = False
 
     # for each network range from the list; do
@@ -207,17 +211,17 @@ if __name__ == '__main__':
 
         # wait for input - DEBUG
         if continue_flag is not True:
-            user_input = input("Should I stop now or continue? [yes/no/continue]")
+            user_input = input("Should I stop now or continue? ([c] == run, don't ask) [yes/no/continue]: ")
             if user_input == 'y' or user_input== 'yes':
                 break
             if user_input == 'c' or user_input == 'continue':
                 continue_flag = True
 
-        # reset ip_addresses
+        # clear ip_addresses
         ip_addresses = []
 
         # expand network range to list of IPV4 addresses
-        # fix IPv4 ranges if there is no subnet mask given or other typo
+        # also fix IPv4 ranges if there is no subnet mask given or some typo
         try:
             network[2][0] = network[2][0].replace(' ', '')
             _, _ = network[2][0].replace(' ', '').split('/')
@@ -240,3 +244,4 @@ if __name__ == '__main__':
 
         except ValueError:
             print('bad network definition:', network[2][0])
+
