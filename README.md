@@ -12,6 +12,6 @@ Gephi is open-source and you may get it @ https://gephi.org/
 The scripts requires 'gephistreamer': https://github.com/totetmatt/gephiStreamer
 
 HOW-TO
-1) load data-reset.gephi file to Gephi before streaming graph (workaround for some glitch in Gephi when the graph hodes and edges are not visible)
+1) load data-reset.gephi file to Gephi before streaming the graph (workaround for some glitch in Gephi, sometimes the graph nodes/edges are not visible)
 2) Gephi has to have streaming plugin installed and enabled
 3) Gephi streaming plugin must be configured to listen on hostname="localhost", port=8080, workspace="workspace0"
