@@ -3,8 +3,8 @@
 #
 # name: streamer.py
 # vers: 0.1
-# if scan.py aleady gathered the data and we want to replay
-# scanning (fast) process, use streamer for replay the scan
+# if scan.py aleady gathered data, we may want to replay (visualize)
+# scan process in Gephi
 #
 
 # standard libs
@@ -15,7 +15,7 @@ import random
 import string
 import operator
 
-# you will need Python classes for streaming graph to gephi
+# you will need Python class 'gephistreamer' for streaming to Gephi
 # https://github.com/totetmatt/GephiStreamer
 from gephistreamer import graph
 from gephistreamer import streamer
@@ -91,7 +91,8 @@ def gephi_push_data(stream, item):
 
 
 if __name__ == '__main__':
-    ''' replay the data '''
+    ''' replay scan in Gephi '''
+
     # anonymize source scan data (IPv4s)
     SALT = generate_salt(32)
 
@@ -103,12 +104,11 @@ if __name__ == '__main__':
     # make sure your gephi workspace is 0
     stream = streamer.Streamer(streamer.GephiREST(hostname="localhost", port=8080, workspace="workspace0"))
 
-    # read data from scan.py and replay in gephi
     for item in gephi_file_stream_read():
         gephi_push_data(stream, item)
         time.sleep(REPLAY_SPEED)
 
-    # print statistics
+    # print statistics, aka. total hosts and unique services/ports open
     print('------------------------------')
     print('[i]  unique systems: ', len(set(uniq_systems)))
     print('[i] unique services: ', len(set(uniq_services)))
